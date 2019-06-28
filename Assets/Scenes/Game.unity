@@ -2134,7 +2134,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc39757457ba20742a621b041330157b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  generationFrame: []
+  generationFrame:
+  - {fileID: 1990788193}
+  - {fileID: 1882515137}
+  - {fileID: 1061782065}
   prefabBlocks:
   - {fileID: 6460178360232245921, guid: 47b7c41f267ea904eb4a1a23ae19d2b3, type: 3}
   - {fileID: 604789266149070414, guid: 331bc45b84c5f844091fc8cdebd084d1, type: 3}
@@ -3443,7 +3446,7 @@ GameObject:
   - component: {fileID: 1061782065}
   - component: {fileID: 1061782066}
   m_Layer: 0
-  m_Name: f1 (2)
+  m_Name: GenerateFrame3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3457,7 +3460,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1061782064}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 8, y: 0, z: -3}
+  m_LocalPosition: {x: 7, y: 0, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
@@ -5492,7 +5495,7 @@ GameObject:
   - component: {fileID: 1882515137}
   - component: {fileID: 1882515138}
   m_Layer: 0
-  m_Name: f1 (1)
+  m_Name: GenerateFrame2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5809,7 +5812,7 @@ GameObject:
   - component: {fileID: 1990788193}
   - component: {fileID: 1990788194}
   m_Layer: 0
-  m_Name: f1
+  m_Name: GenerateFrame1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5823,7 +5826,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1990788192}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -3}
+  m_LocalPosition: {x: 1, y: 0, z: -3}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
