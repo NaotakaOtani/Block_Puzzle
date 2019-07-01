@@ -2,34 +2,72 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GameMaster : MonoBehaviour
 {
+
+    // --------------------------------------------------
+    //  Score
+
+    // スコア表示
+    private int score;
+    // スコア表示用テキスト
+    public Text scoreText;
+    // スコア保存場所キー
+    private string scoreKey = "totalScore";
+
+    // --------------------------------------------------
+
+    // --------------------------------------------------
+    // Timer
+
+    // 分
+    private int minute;
+    // 秒
+    private float seconds;
+    // 前のUpdate時の秒数
+    private float oldSeconds;
+    // タイマー表示用テキスト
+    public Text timerText;
+
+    // --------------------------------------------------
+
+
     // 盤の一辺の長さ（1マスを1とする）
     private const int boardLength = 8;
     // 乱数用
     private int ran;
-    
+    // 使用済みブロックの数
+    private int numberOfUsedBlks = 0;
+
     // Rayが衝突した対象がブロックかどうか
     private bool rayHitBlk = false;
+    // 置きフラグ
+    private bool putFlg = false;
 
     // ブロックの初期位置用
     private Vector3 initialPos;
 
     // Ray
     private Ray ray;
-    // Raycas による取得した情報を得る構造体（ブロック、）
-    private RaycastHit hitBlkInfo;
-    
+    // Raycas による取得した情報を得る構造体（ブロック、盤）
+    private RaycastHit hitBlkInfo, hitBdInfo;
+    // Raycas による取得した情報を得る構造体配列（ブロック、盤）
+    private RaycastHit[] hitObjs;
+
     // 生成されるブロック番号（３つ）
     private int[] blockNum　= new int[3];
+    
+
     // ブロックの生成位置用の枠
     public Transform[] generationFrame;
     // ブロックプレハブ用
     public Transform[] prefabBlocks;
     // ブロックごとの全gameObjectのTransform収納用
     private Transform[] blockObjs;
-
+    // 掴んでいるブロック情報格納用
+    private Transform[] currentBlk;
 
     // 盤の現在状況を格納 List<List<bool>>
     private List<List<bool>> board = new List<List<bool>>();
@@ -46,6 +84,8 @@ public class GameMaster : MonoBehaviour
         BlockInit();
 
         Generate();
+
+        ScoreInit();
     }
 
     // 更新はフレームごとに1回呼び出されます
@@ -65,9 +105,12 @@ public class GameMaster : MonoBehaviour
         // 左ボタンが離されたなら（タップ...）かつ、ブロックを掴んでいるなら
         if (Input.GetMouseButtonUp(0) && rayHitBlk)
         {
+            Put();
+
             rayHitBlk = false;
         }
-        
+        // スコアを表示する
+        scoreText.text = score.ToString("000000");
     }
 
 
@@ -244,6 +287,26 @@ public class GameMaster : MonoBehaviour
     }
 
     /// <summary>
+    /// スコアの初期設定
+    /// </summary>
+    private void ScoreInit()
+    {
+        // scoreを0に戻す
+        score = 0;
+    }
+
+    /// <summary>
+    /// タイマーの初期設定
+    /// </summary>
+    private void TimerInit()
+    {
+        minute = 0;
+        seconds = 0f;
+        oldSeconds = 0;
+    }
+
+
+    /// <summary>
     /// クリック（タップ）した場所にブロックが存在するか判定する
     /// </summary>
     private bool Check()
@@ -279,10 +342,110 @@ public class GameMaster : MonoBehaviour
         hitBlkInfo.collider.gameObject.transform.position = screenPos;
     }
 
-
+    /// <summary>
+    /// 掴んだブロックを盤に置く
+    /// </summary>
     private void Put()
     {
+        // 掴んでいるブロックの全オブジェクトのTransformを取得する
+        currentBlk = hitBlkInfo.collider.gameObject.GetComponentsInChildren<Transform>();
+        // 盤オブジェクトに衝突sしたBlockCube数
+        int cubeCount = 0;
 
+        foreach (Transform cb in currentBlk.Skip(1))
+        {
+            // 掴んでいるブロックの各子オブジェクトから光線を撃つ（子オブジェクトの少し手前から）
+            ray = new Ray(cb.position + new Vector3(0, 1.1f, 0), cb.TransformDirection(new Vector3(0, -1, 0)));
+            Debug.DrawRay(cb.position + new Vector3(0, 1.1f, 0), ray.direction * 5, Color.blue, 5);
+            // ブロックから盤に向けて光線を撃ち、衝突した全てのオブジェクトを取得する
+            hitObjs = Physics.RaycastAll(ray.origin, ray.direction, 5.0f);
+            // Layer: Board
+            int layerBoard = LayerMask.NameToLayer("Board");
+            // 盤オブジェクトのときにカウントを１つ増やし、他のブロックピースが存在するならカウントを１つ減らす
+            foreach (RaycastHit hos in hitObjs)
+            {              
+                if (hos.collider.gameObject.layer == layerBoard )
+                {
+                    cubeCount++;
+                }
+                else if (hos.collider.gameObject.tag == "Piece")
+                {
+                    cubeCount--;
+                }
+            }      
+        }
+        // 盤に掴んでいるブロックを置ける空きがあるなら
+        if (cubeCount == currentBlk.Length - 1)
+        {
+            // 親オブジェクトの中心からの光線
+            ray = new Ray(currentBlk[0].gameObject.transform.position, currentBlk[0].TransformDirection(new Vector3(0, -1, 0)));
+            // 取得した盤オブジェクトの座標をブロックオブジェクトに代入する（盤に置く）
+            if (Physics.Raycast(ray.origin, ray.direction, out hitBdInfo, 5.0f, LayerMask.GetMask("Board")))
+            {     
+                hitBlkInfo.collider.gameObject.transform.position = hitBdInfo.collider.gameObject.transform.position + new Vector3(0, 1, 0);
+            }
+            // ブロックを置いた後の子オブジェクトの処理
+            foreach (Transform cb in currentBlk)
+            {
+                // 親オブジェクトから抜け出す
+                cb.parent = null;
+                // 子オブジェクトにタグ（Piece）を付ける
+                cb.tag = "Piece";
+            }
+
+            // 親オブジェクトを即時削除する（Destroyの場合１フレームの間は存在しているので注意）
+            DestroyImmediate(hitBlkInfo.collider.gameObject);
+            // 使用済みブロック数を１つ増やす
+            numberOfUsedBlks++;
+            // 置き判定（true）
+            putFlg = true;
+            // ブロックを置いた時のポイント加算
+            AddPoint(0);
+        }
+        else
+        {
+            // ブロックの縮小
+            hitBlkInfo.collider.gameObject.transform.localScale = new Vector3(0.5f, 1, 0.5f);
+            // 掴んだブロックを初期位置に戻す
+            hitBlkInfo.collider.gameObject.transform.position = initialPos;
+        }
+
+    }
+
+    /// <summary>
+    /// 一列揃ったPieceを削除する
+    /// </summary>
+    private void Delete()
+    {
+
+    }
+
+    /// <summary>
+    /// スコアのポイント加算
+    /// </summary>
+    public void AddPoint(int line)
+    {
+        // line: 0(ブロックが置かれたとき) line: 1～6(列が揃ったとき)
+        if (line == 0)
+        {
+            score += 100;
+        }
+        else if ( 0 < line && line < 7 )
+        {
+            int point = 100 * line * 2;
+            score += point;
+        }
+        
+    }
+
+    /// <summary>
+    /// スコアデータをResultシーンへ持っていくための保存
+    /// </summary>
+    public void ScoreSave()
+    {
+        // 一時的にスコアデータをscoreKeyで用意した場所に保存する
+        PlayerPrefs.SetInt(scoreKey, score);
+        PlayerPrefs.Save();
     }
 
 
