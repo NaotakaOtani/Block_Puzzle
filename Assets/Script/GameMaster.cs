@@ -45,20 +45,23 @@ public class GameMaster : MonoBehaviour
     private bool rayHitBlk = false;
     // 置きフラグ
     private bool putFlg = false;
+    // タイムアップフラグ
+    private bool timeUpflg = false;
 
     // ブロックの初期位置用
     private Vector3 initialPos;
 
     // Ray
     private Ray ray;
-    // Raycas による取得した情報を得る構造体（ブロック、盤）
-    private RaycastHit hitBlkInfo, hitBdInfo;
-    // Raycas による取得した情報を得る構造体配列（ブロック、盤）
-    private RaycastHit[] hitObjs;
+    // Raycas による取得した情報を得る構造体（ブロック、盤、盤上のPiece）
+    private RaycastHit hitBlkInfo, hitBdInfo, hitPieceOnBd;
+    // Raycas による取得した情報を得る構造体配列（子オブジェクト、X軸、Z軸）
+    private RaycastHit[] hitObjs, hitXAxisObjs, hitZAxisObjs;
 
     // 生成されるブロック番号（３つ）
-    private int[] blockNum　= new int[3];
-    
+    private int[] blockNums　= new int[3];
+    // ブロックの使用状況
+    private bool[] usedBlks = new bool[3];
 
     // ブロックの生成位置用の枠
     public Transform[] generationFrame;
@@ -86,11 +89,25 @@ public class GameMaster : MonoBehaviour
         Generate();
 
         ScoreInit();
+
+        TimerInit();
     }
 
     // 更新はフレームごとに1回呼び出されます
     void Update()
     {
+        Timer();
+        // ブロックを置かれた直後なら
+        if (putFlg)
+        {
+            GetBoardSituation();
+
+            GetUsedBlocks();
+
+
+            // 置き判定をfalseに変更する
+            putFlg = false;
+        }
 
         // 左ボタンが押されたなら（タップ...）
         if (Input.GetMouseButtonDown(0))
@@ -108,9 +125,22 @@ public class GameMaster : MonoBehaviour
             Put();
 
             rayHitBlk = false;
+            // ブロックを置いたとき
+            if (putFlg)
+            {
+                Delete();
+            }
         }
         // スコアを表示する
         scoreText.text = score.ToString("000000");
+
+        if (numberOfUsedBlks >= 3)
+        {
+            Generate();
+            // 使用済みブロック数初期化
+            numberOfUsedBlks = 0;
+        }
+
     }
 
 
@@ -179,7 +209,7 @@ public class GameMaster : MonoBehaviour
             // 乱数生成（0 ～ (PrefabBlock数 - 1)）
             ran = UnityEngine.Random.Range(0, prefabBlocks.Length);
             // 生成されるブロック番号を格納する
-            blockNum[i] = ran;
+            blockNums[i] = ran;
             // Centerの座標を求める
             Vector3 centerPos = GetCenterPosition(prefabBlocks[ran]);
             // Center から Pivot までどのくらいの距離があるか
@@ -300,11 +330,48 @@ public class GameMaster : MonoBehaviour
     /// </summary>
     private void TimerInit()
     {
-        minute = 0;
+        // １秒ずつ
+        Time.timeScale = 1f;
+        // ３分
+        minute = 3;
+        // ０秒
         seconds = 0f;
-        oldSeconds = 0;
+        oldSeconds = 0f;
     }
 
+    /// <summary>
+    /// タイマー（3分）
+    /// </summary>
+    private void Timer()
+    {
+        // 0秒のとき、分を１つ減らし、60秒に戻す
+        if (seconds <= 0f)
+        {
+            minute--;
+            seconds += 60;
+        }
+        // タイマーが0:01以上のときカウントダウン、又は0:00のときスコアを保存
+        if ((minute) >= 0 && (seconds != 0f))
+        {
+            seconds -= Time.deltaTime;
+        }
+        else if ((minute == 0) && (seconds <= 0f))
+        {
+            // タイムアップ判定（true）
+            timeUpflg = true;
+
+            ScoreSave();
+
+        }
+        // 値が変わったときテキストUIを更新
+        if ((int)seconds != (int)oldSeconds)
+        {
+            timerText.text = minute.ToString("0") + ":" + ((int)seconds).ToString("00");
+        }
+        // 次のフレームで使うために現在の秒を代入
+        oldSeconds = seconds;
+
+    }
 
     /// <summary>
     /// クリック（タップ）した場所にブロックが存在するか判定する
@@ -417,7 +484,45 @@ public class GameMaster : MonoBehaviour
     /// </summary>
     private void Delete()
     {
+        // 揃った列の数
+        int lineCount = 0;
 
+        // 左から右へ↑方向にRayを撃つ
+        for (int x = 0; x < boardLength; x++)
+        {
+            ray = new Ray(new Vector3(0.5f + x, 0.5f, -1), new Vector3(0, 0, 1));            
+            hitXAxisObjs = Physics.RaycastAll(ray.origin, ray.direction, 10.0f);
+            // 一列揃っているなら
+            if (hitXAxisObjs.Length == 8)
+            {
+                foreach (RaycastHit ho in hitXAxisObjs)
+                {
+                    // 1つずつPieceを削除（1フレーム中は存在する）
+                    Destroy(ho.collider.gameObject);
+                }
+                // ライン数を１つ増やす
+                lineCount++;
+            }
+        }
+        //　下から上へ→方向にRayを撃つ
+        for (int z = 0; z < boardLength; z++)
+        {
+            ray = new Ray(new Vector3(-1, 0.5f, 0.5f + z), new Vector3(1, 0));
+            hitZAxisObjs = Physics.RaycastAll(ray.origin, ray.direction, 10.0f);
+            // 一列揃っているなら
+            if (hitZAxisObjs.Length == 8)
+            {
+                foreach (RaycastHit ho in hitZAxisObjs)
+                {
+                    // 1つずつPieceを削除（1フレーム中は存在する）
+                    Destroy(ho.collider.gameObject);
+                }
+                // ライン数を１つ増やす
+                lineCount++;
+            }
+        }
+        // ブロックが揃ったときのポイント加算
+        AddPoint(lineCount);        
     }
 
     /// <summary>
@@ -448,5 +553,63 @@ public class GameMaster : MonoBehaviour
         PlayerPrefs.Save();
     }
 
+    /// <summary>
+    /// 盤面の状況を取得する
+    /// </summary>
+    private void GetBoardSituation()
+    {
+        // 盤配列の要素の値を初期化
+        int x = 0, z = 0;
+        
+        for (float f = 0.5f; f < boardLength; f++)
+        {
+            for (float g = 0.5f; g < boardLength; g++)
+            {
+                // x:z = 0:0 マスの中心から盤面に向かって
+                ray = new Ray(new Vector3(g, 1.1f, f), new Vector3(0, -1, 0));
+                Physics.Raycast(ray.origin, ray.direction, out hitPieceOnBd, 1.5f);
+                // 盤上にPieceがあるならtrue、そうでないならfalse
+                if (hitPieceOnBd.collider.gameObject.tag == "Piece")
+                {
+                    board[z][x] = true;
+                }
+                else
+                {
+                    board[z][x] = false;
+                }
+                // xの値を１つ増やす
+                x++;
+            }
+            // xの値を初期化
+            x = 0;
+            // zの値を１つ増やす
+            z++;
+        }
+    }
 
+    /// <summary>
+    /// どのブロックが使われたかを取得する
+    /// </summary>
+    private void GetUsedBlocks()
+    {
+        int next = 0;
+
+        for (int i = 0; i < 3; i++)
+        {
+            // 一番左のブロック生成位置の中心から、右のブロック生成位置の中心へ
+            ray = new Ray(new Vector3(1 + next, 2f, -3), new Vector3(0, -1, 0));
+            Debug.DrawRay(ray.origin, ray.direction * 2, Color.white, 3);
+            // ブロックの生成位置に、まだ未使用のブロックがあるならtrue、そうでないならfalse
+            if (Physics.Raycast(ray.origin, ray.direction, out hitBdInfo, 2.0f, LayerMask.GetMask("Block")))
+            {
+                usedBlks[i] = true;
+            }
+            else
+            {
+                usedBlks[i] = false;
+            }
+            // nextの値を３つ増やす
+            next += 3;
+        }
+    }
 }
