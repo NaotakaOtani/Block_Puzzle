@@ -18,8 +18,6 @@ public class GameMaster : MonoBehaviour
     private string scoreKey = "totalScore";
 
     // --------------------------------------------------
-
-    // --------------------------------------------------
     // Timer
 
     // 分
@@ -30,6 +28,13 @@ public class GameMaster : MonoBehaviour
     private float oldSeconds;
     // タイマー表示用テキスト
     public Text timerText;
+
+    // --------------------------------------------------
+    // Pause
+
+    // ポーズパネル
+    public GameObject pausePanel;
+
 
     // --------------------------------------------------
 
@@ -47,6 +52,8 @@ public class GameMaster : MonoBehaviour
     private bool putFlg = false;
     // タイムアップフラグ
     private bool timeUpflg = false;
+    // ゲームオーバーフラグ
+    private bool gameOverFlg = false;
 
     // ブロックの初期位置用
     private Vector3 initialPos;
@@ -85,12 +92,15 @@ public class GameMaster : MonoBehaviour
         BoardInit();
 
         BlockInit();
-
+        
         Generate();
 
         ScoreInit();
 
         TimerInit();
+
+        // Pauseパネルを非表示にする
+        pausePanel.SetActive(false);
     }
 
     // 更新はフレームごとに1回呼び出されます
@@ -104,9 +114,16 @@ public class GameMaster : MonoBehaviour
 
             GetUsedBlocks();
 
+            gameOverFlg = GameOver();
 
             // 置き判定をfalseに変更する
             putFlg = false;
+        }
+        // GameOver
+        if (gameOverFlg)
+        {
+            //リザルト画面へ
+            Debug.Log("---------- Game Over ----------");
         }
 
         // 左ボタンが押されたなら（タップ...）
@@ -612,4 +629,113 @@ public class GameMaster : MonoBehaviour
             next += 3;
         }
     }
+
+    /// <summary>
+    /// 盤にブロックがおけるかどうか１つずつ調べる
+    /// </summary>
+    /// <returns>空き有り or 無し</returns>
+    private bool CanPutBlock(int blockNum)
+    {
+        // ブロックの形で空きのあるマス数
+        int pieceCount = 0;
+        
+        // 盤のZ軸方向
+        for (int i = 0; i < boardLength - block[blockNum].GetLength(1) + 1; i++)
+        {
+            // 盤のX軸方向
+            for (int j = 0; j < boardLength - block[blockNum].GetLength(0) + 1; j++)
+            {
+                // ブロックのZ軸方向
+                for (int z = 0; z < block[blockNum].GetLength(1); z++)
+                {
+                    // ブロックのX軸方向
+                    for (int x = 0; x < block[blockNum].GetLength(0); x++)
+                    {
+                        // ブロック配列のｘ*ｚの範囲中、ブロックのない場所は飛ばす。そうではなく盤に空きがあるならカウントの値を１つ増やす                        
+                        if (block[blockNum][x, z] == false)
+                        {
+                            continue;
+                        }
+                        else if (board[i + z][j + x] == false)
+                        {
+                            pieceCount++;
+                        }
+                        if (pieceCount == numberOfChildObjsOfblk[blockNum])
+                        {
+                            return true;
+                        }
+                    }                    
+                }
+                // pieceCountを初期化
+                pieceCount = 0;
+            }
+        }
+        // 盤にブロックを置ける場所が存在しない
+        return false;
+    }
+
+    /// <summary>
+    /// GameOver判定
+    /// </summary>
+    /// <returns>終了判定 or 続行判定</returns>
+    private bool GameOver()
+    {
+        // 未使用ブロック数、置けないブロック数
+        int usedBlkCount = 0, cannotPutCount = 0;
+        
+                
+        for (int i = 0; i < 3; i++)
+        {
+            // 未使用ブロックのとき
+            if (usedBlks[i] == true)
+            {
+                // 未使用ブロックを数える
+                usedBlkCount++;
+                Debug.Log("use:" + usedBlks[i]);
+                Debug.Log("Emp:" + CanPutBlock(blockNums[i]));
+                // 置き場所のないブロックを数える
+                if (!(CanPutBlock(blockNums[i])))
+                {
+                    cannotPutCount++;
+                }
+            }                                         
+        }
+        Debug.Log("ubc:" + usedBlkCount);
+        Debug.Log("cpc:" + cannotPutCount);
+        // 未使用ブロック数を置き場所の無いブロック数が一致したなら
+        if (usedBlkCount == cannotPutCount)
+        {
+            // GameOver
+            return true;
+        }
+        // Game続行
+        return false;
+    }
+
+
+
+
+
+    // BlockInit 確認用
+    private void blkShow()
+    {
+
+        string s = "";
+
+        for (int i = 0; i < 30; i++)
+        {
+            for (int x = 0; x < block[i].GetLength(0); x++)
+            {
+                for (int z = 0; z < block[i].GetLength(1); z++)
+                {
+                    s += block[i][x, z];
+                }
+                s += "\r\n";
+            }
+        }
+
+        Debug.Log(s);
+        
+    }
+
 }
