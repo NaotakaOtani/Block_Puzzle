@@ -148,8 +148,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -364, y: -855}
-  m_SizeDelta: {x: 300, y: 100}
+  m_AnchoredPosition: {x: -365, y: -830}
+  m_SizeDelta: {x: 300, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &124439824
 MonoBehaviour:
@@ -217,7 +217,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0, g: 0.6431373, b: 0.45490196, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -291,7 +291,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -311,7 +311,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Play
+  m_Text: Start
 --- !u!222 &161216574
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -399,7 +399,7 @@ GameObject:
   - component: {fileID: 235893690}
   - component: {fileID: 235893689}
   m_Layer: 5
-  m_Name: PlayBtn
+  m_Name: StartBtn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -422,8 +422,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 365, y: -855}
-  m_SizeDelta: {x: 300, y: 100}
+  m_AnchoredPosition: {x: 365, y: -830}
+  m_SizeDelta: {x: 300, y: 150}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &235893689
 MonoBehaviour:
@@ -491,7 +491,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0, b: 0, a: 1}
+  m_Color: {r: 0, g: 0.6431373, b: 0.45490196, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -678,7 +678,7 @@ GameObject:
   - component: {fileID: 993471462}
   - component: {fileID: 993471461}
   m_Layer: 5
-  m_Name: RuleTxt
+  m_Name: RuleText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -700,8 +700,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -22, y: 127}
-  m_SizeDelta: {x: 800, y: 1600}
+  m_AnchoredPosition: {x: 0, y: 100}
+  m_SizeDelta: {x: 1000, y: 1500}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &993471461
 MonoBehaviour:
@@ -716,7 +716,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_Color: {r: 0, g: 0, b: 0, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -726,17 +726,17 @@ MonoBehaviour:
   m_FontData:
     m_Font: {fileID: 10102, guid: 0000000000000000e000000000000000, type: 0}
     m_FontSize: 80
-    m_FontStyle: 0
+    m_FontStyle: 1
     m_BestFit: 0
     m_MinSize: 8
     m_MaxSize: 80
-    m_Alignment: 0
+    m_Alignment: 4
     m_AlignByGeometry: 0
     m_RichText: 1
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u305D\u306E\uFF11\n8\u27158\u306E\u67A0\u3067\u7E26\u5217\u307E\u305F\u306F\u6A2A\u5217\u304C1\u5217\u305D\u308D\u3046\u3068\u305D\u306E\u5217\u306F\u6D88\u3048\u307E\u3059\u3002\n\r\n\u305D\u306E\uFF12\t\uFF13\u5206\u4EE5\u5185\u306B\u30D6\u30ED\u30C3\u30AF\u3092\u6D88\u3057\u3066\u30B9\u30B3\u30A2\u3092\u3042\u3052\u3088\u3046\u3002\u3000\uFF13\u5206\u7D4C\u3064\u3068\u305D\u306E\u6642\u70B9\u3067\u30B2\u30FC\u30E0\u304C\u7D42\u4E86\u3059\u308B\u3088\r\n\n\u305D\u306E\uFF13\n\u30D6\u30ED\u30C3\u30AF\u3092\u7F6E\u3051\u308B\u5834\u6240\u304C\u306A\u304F\u306A\u3063\u305F\u3089\u305D\u306E\u6642\u70B9\u3067\u30B2\u30FC\u30E0\u30AA\u30FC\u30D0\u30FC\u306B\u306A\u308A\u307E\u3059\u3002"
+  m_Text: "1.\u30D6\u30ED\u30C3\u30AF\u304C\u7E26\u3001\u6A2A\u306B\u4E00\u5217\u305D\u308D\u3046\u3068\u6D88\u3048\u3001\u30DD\u30A4\u30F3\u30C8\u304C\u5165\u308A\u307E\u3059\u3002\r\n\n2.\u30D6\u30ED\u30C3\u30AF\u306F\u56DE\u8EE2\u3059\u308B\u3053\u3068\u306F\u3067\u304D\u305A\u3001\u4E00\u5EA6\u7F6E\u304F\u3068\u52D5\u304B\u305B\u307E\u305B\u3093\r\u3002\n\n3.\u30D6\u30ED\u30C3\u30AF\u3092\u4E09\u3064\u4F7F\u308F\u306A\u3044\u3068\u65B0\u3057\u3044\u30D6\u30ED\u30C3\u30AF\u306F\u751F\u6210\u3055\u308C\u307E\u305B\u3093\u3002\r\n\n4.\u4E09\u5206\u7D4C\u904E\u307E\u305F\u306F\u30D6\u30ED\u30C3\u30AF\u304C\u7F6E\u3051\u306A\u304F\u306A\u308B\u3068\u30B2\u30FC\u30E0\u7D42\u4E86\u3067\u3059\u3002"
 --- !u!222 &993471462
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -832,7 +832,7 @@ Transform:
   m_GameObject: {fileID: 1638492803}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 4, y: 0, z: 4}
-  m_LocalScale: {x: 1.2, y: 1, z: 2.1}
+  m_LocalScale: {x: 1.3, y: 1, z: 2.1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 4
@@ -1001,7 +1001,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.19607843, g: 0.19607843, b: 0.19607843, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
@@ -1021,7 +1021,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "\u623B\u308B"
+  m_Text: Back
 --- !u!222 &1734101998
 CanvasRenderer:
   m_ObjectHideFlags: 0

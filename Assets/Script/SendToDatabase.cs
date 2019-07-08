@@ -31,7 +31,8 @@ public class SendToDatabase : MonoBehaviour
         resultText.text = resultScore.ToString("000000");
 
 
-        InitInputField();
+        //値をリセット
+        inputField.text = "";
     }
 
     public void InputLogger()
@@ -59,7 +60,7 @@ public class SendToDatabase : MonoBehaviour
 
         InitInputField();
 
-        SceneManager.LoadScene("Title");
+        SceneManager.LoadScene("Home");
     }
 
     /// <summary>

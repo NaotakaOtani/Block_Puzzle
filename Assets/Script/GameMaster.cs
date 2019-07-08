@@ -1,8 +1,9 @@
-﻿//using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameMaster : MonoBehaviour
 {
@@ -24,6 +25,8 @@ public class GameMaster : MonoBehaviour
     private int minute;
     // 秒
     private float seconds;
+    // 総時間（秒）
+    private float totalTime;
     // 前のUpdate時の秒数
     private float oldSeconds;
     // タイマー表示用テキスト
@@ -34,6 +37,15 @@ public class GameMaster : MonoBehaviour
 
     // ポーズパネル
     public GameObject pausePanel;
+
+
+    // --------------------------------------------------
+    // Message
+
+    // タイムアップ時のメッセージ
+    public Text timeUpText;
+    // ゲームオーバー時のメッセージ
+    public Text gameOverText;
 
 
     // --------------------------------------------------
@@ -50,8 +62,10 @@ public class GameMaster : MonoBehaviour
     private bool rayHitBlk = false;
     // 置きフラグ
     private bool putFlg = false;
+    // ポーズフラグ
+    private bool pauseFlg = false;
     // タイムアップフラグ
-    private bool timeUpflg = false;
+    private bool timeUpFlg = false;
     // ゲームオーバーフラグ
     private bool gameOverFlg = false;
 
@@ -99,8 +113,10 @@ public class GameMaster : MonoBehaviour
 
         TimerInit();
 
-        // Pauseパネルを非表示にする
-        pausePanel.SetActive(false);
+        Hidden();
+
+        StartCoroutine(WaitForStart());
+        
     }
 
     // 更新はフレームごとに1回呼び出されます
@@ -114,7 +130,7 @@ public class GameMaster : MonoBehaviour
 
             GetUsedBlocks();
 
-            gameOverFlg = GameOver();
+            gameOverFlg = GameOverJudgment();
 
             // 置き判定をfalseに変更する
             putFlg = false;
@@ -122,44 +138,44 @@ public class GameMaster : MonoBehaviour
         // GameOver
         if (gameOverFlg)
         {
-            //リザルト画面へ
-            Debug.Log("---------- Game Over ----------");
+            StartCoroutine(GameOver());
         }
-
-        // 左ボタンが押されたなら（タップ...）
-        if (Input.GetMouseButtonDown(0))
+        // ポーズ、タイムアップ、ゲームオーバーフラウが立っていないなら
+        if (pauseFlg == false && timeUpFlg == false && gameOverFlg == false)
         {
-            rayHitBlk = Check();
-        }
-        // ブロックを掴んでいる間
-        if (rayHitBlk)
-        {
-            Movement();
-        }
-        // 左ボタンが離されたなら（タップ...）かつ、ブロックを掴んでいるなら
-        if (Input.GetMouseButtonUp(0) && rayHitBlk)
-        {
-            Put();
-
-            rayHitBlk = false;
-            // ブロックを置いたとき
-            if (putFlg)
+            // 左ボタンが押されたなら（タップ...）
+            if (Input.GetMouseButtonDown(0))
             {
-                Delete();
+                rayHitBlk = Check();
             }
-        }
+            // ブロックを掴んでいる間
+            if (rayHitBlk)
+            {
+                Movement();
+            }
+            // 左ボタンが離されたなら（タップ...）かつ、ブロックを掴んでいるなら
+            if (Input.GetMouseButtonUp(0) && rayHitBlk)
+            {
+                Put();
+
+                rayHitBlk = false;
+                // ブロックを置いたとき
+                if (putFlg)
+                {
+                    Delete();
+                }
+            }
+        }     
         // スコアを表示する
         scoreText.text = score.ToString("000000");
-
+        // ブロックを3つ生成
         if (numberOfUsedBlks >= 3)
         {
             Generate();
             // 使用済みブロック数初期化
             numberOfUsedBlks = 0;
         }
-
     }
-
 
     /* ------------------------------------------------------------ */
 
@@ -353,33 +369,50 @@ public class GameMaster : MonoBehaviour
         minute = 3;
         // ０秒
         seconds = 0f;
+        // 総時間を代入
+        totalTime = minute * 60 + (int)seconds;
+        // 1フレーム前の時間（秒）
         oldSeconds = 0f;
+    }
+
+    /// <summary>
+    /// ポーズパネル、タイムアップテキスト、ゲームオーバーテキストを非表示にする
+    /// </summary>
+    private void Hidden()
+    {
+        // Pauseパネルを非表示にする
+        pausePanel.SetActive(false);
+        // TimuUpTextを非表示にする
+        timeUpText.enabled = false;
+        // GameOverTextを非表示にする
+        gameOverText.enabled = false;
+    }
+
+    /// <summary>
+    /// 開始の待機時間
+    /// </summary>
+    /// <returns>new WaitForSeconds(2.0f)</returns>
+    private IEnumerator WaitForStart()
+    {
+        // 2秒待機
+        yield return new WaitForSeconds(2.0f);
     }
 
     /// <summary>
     /// タイマー（3分）
     /// </summary>
     private void Timer()
-    {
-        // 0秒のとき、分を１つ減らし、60秒に戻す
-        if (seconds <= 0f)
+    {   
+        // 総時間が0秒以下、又はゲームオーバー時
+        if (totalTime <= 0 || gameOverFlg == true)
         {
-            minute--;
-            seconds += 60;
+            return;
         }
-        // タイマーが0:01以上のときカウントダウン、又は0:00のときスコアを保存
-        if ((minute) >= 0 && (seconds != 0f))
-        {
-            seconds -= Time.deltaTime;
-        }
-        else if ((minute == 0) && (seconds <= 0f))
-        {
-            // タイムアップ判定（true）
-            timeUpflg = true;
-
-            ScoreSave();
-
-        }
+        // 一旦総時間を計測
+        totalTime -= Time.deltaTime;
+        // 分と秒の再設定
+        minute = (int)totalTime / 60;
+        seconds = totalTime - minute * 60;
         // 値が変わったときテキストUIを更新
         if ((int)seconds != (int)oldSeconds)
         {
@@ -387,7 +420,29 @@ public class GameMaster : MonoBehaviour
         }
         // 次のフレームで使うために現在の秒を代入
         oldSeconds = seconds;
+        // タイムアップ処理へ
+        if (totalTime <= 0f)
+        {
+            StartCoroutine(TimeUp());
+        }
+    }
 
+    /// <summary>
+    /// タイムアップ時の処理
+    /// </summary>
+    /// <returns>new WaitForSeconds(2.0f)</returns>
+    private IEnumerator TimeUp()
+    {
+        // TimeUp
+        timeUpFlg = true;
+
+        ScoreSave();
+        // timeUpTextを表示
+        timeUpText.enabled = true;        
+        // 2秒待機
+        yield return new WaitForSeconds(2.0f);        
+        // リザルトシーンへ遷移
+        SceneManager.LoadScene("Result");
     }
 
     /// <summary>
@@ -419,7 +474,7 @@ public class GameMaster : MonoBehaviour
         // マウスの座標を取得する
         Vector3 mousePos = Input.mousePosition;
         //
-        mousePos.z = 14.5f;
+        mousePos.z = 14.0f;
 
         Vector3 screenPos = Camera.main.ScreenToWorldPoint(mousePos);
 
@@ -483,8 +538,6 @@ public class GameMaster : MonoBehaviour
             numberOfUsedBlks++;
             // 置き判定（true）
             putFlg = true;
-            // ブロックを置いた時のポイント加算
-            AddPoint(0);
         }
         else
         {
@@ -550,11 +603,11 @@ public class GameMaster : MonoBehaviour
         // line: 0(ブロックが置かれたとき) line: 1～6(列が揃ったとき)
         if (line == 0)
         {
-            score += 100;
+            score += 500;
         }
         else if ( 0 < line && line < 7 )
         {
-            int point = 100 * line * 2;
+            int point = 1000 * (line * line);
             score += point;
         }
         
@@ -678,7 +731,7 @@ public class GameMaster : MonoBehaviour
     /// GameOver判定
     /// </summary>
     /// <returns>終了判定 or 続行判定</returns>
-    private bool GameOver()
+    private bool GameOverJudgment()
     {
         // 未使用ブロック数、置けないブロック数
         int usedBlkCount = 0, cannotPutCount = 0;
@@ -691,8 +744,8 @@ public class GameMaster : MonoBehaviour
             {
                 // 未使用ブロックを数える
                 usedBlkCount++;
-                Debug.Log("use:" + usedBlks[i]);
-                Debug.Log("Emp:" + CanPutBlock(blockNums[i]));
+                //Debug.Log("use:" + usedBlks[i]);
+                //Debug.Log("Emp:" + CanPutBlock(blockNums[i]));
                 // 置き場所のないブロックを数える
                 if (!(CanPutBlock(blockNums[i])))
                 {
@@ -700,8 +753,8 @@ public class GameMaster : MonoBehaviour
                 }
             }                                         
         }
-        Debug.Log("ubc:" + usedBlkCount);
-        Debug.Log("cpc:" + cannotPutCount);
+        //Debug.Log("ubc:" + usedBlkCount);
+        //Debug.Log("cpc:" + cannotPutCount);
         // 未使用ブロック数を置き場所の無いブロック数が一致したなら
         if (usedBlkCount == cannotPutCount)
         {
@@ -712,7 +765,45 @@ public class GameMaster : MonoBehaviour
         return false;
     }
 
+    /// <summary>
+    /// ゲームオーバー
+    /// </summary>
+    /// <returns></returns>
+    private IEnumerator GameOver()
+    {          
+        ScoreSave();
+        // gameOverTextを表示
+        gameOverText.enabled = true;
+        // 2秒待機
+        yield return new WaitForSeconds(2.0f);
+        // リザルトシーンへ遷移
+        SceneManager.LoadScene("Result");    
+    }
 
+    /// <summary>
+    /// ポーズ処理
+    /// </summary>
+    public void Pause()
+    {
+        // ポーズパネルが非表示のときに一時停止ボタンが押されたら
+        if (pausePanel.activeSelf == false)
+        {
+            // 一時停止
+            pauseFlg = true;
+            // 1秒単位で進めている時間を0秒にして停止させ、ポーズパネルを表示する
+            Time.timeScale = 0f;
+            pausePanel.SetActive(true);
+            
+        }
+        // ポーズパネルが表示しているときに一時停止ボタンが押されたら
+        else if (pausePanel.activeSelf == true)
+        {
+            pauseFlg = false;
+            // 時間を元に戻し、ポーズパネルを非表示にする
+            Time.timeScale = 1f;
+            pausePanel.SetActive(false);
+        }
+    }
 
 
 
