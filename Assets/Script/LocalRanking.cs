@@ -50,17 +50,48 @@ public class LocalRanking : MonoBehaviour
 
         //ランキングデータを取ってくる
         getRanking();
-        string[] rankingList = new string[ranking.Count];
-        if (ranking.Count > 0)
+        string[] rankingList = ranking.ToArray();
+        if (rankingList.Length > 0)
         {
-            //降順に並べる
-            var renkingDec = ranking.OrderByDescending(value => value);
-            //Listを配列に
-            rankingList = renkingDec.ToArray();
+            // 降順に並べる
+            BubbleSort(rankingList);
         }
         string ranking_string = string.Join(",", rankingList);
         PlayerPrefs.SetString(RANKING_PREF_KEY, ranking_string);
 
+    }
+    // バブルソート
+    public string[] BubbleSort(string[] array)
+    {
+        int ranking_Length = array.Length;
+        // 最終要素を除いて全て比較する
+        for (int i = 0; i < ranking_Length - 1; i++)
+        {
+            // 最終要素から、現在比較中の要素までループ
+            // このループが終われば array[i] にはソート済のデータが入っている
+            for (int j = ranking_Length - 1; i < j; j--)
+            {
+                string[] right_tmp = array[j].Split("."[0]);
+                int right = int.Parse(right_tmp[0]);
+
+                string[] left_tmp = array[j - 1].Split("."[0]);
+                int left = int.Parse(left_tmp[0]);
+
+                // j番目の要素が一つ前の要素より大きいならばスワップ
+                if (right.CompareTo(left) > 0)
+                {
+                    Swap(ref array[j], ref array[j - 1]);
+                }
+            }
+        }
+        return array;
+    }
+
+    public void Swap<T>(ref T a, ref T b)
+    {
+        var tmp = a;
+        a = b;
+        b = tmp;
     }
 
     //ランキングデータを消去するときに

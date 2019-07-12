@@ -7,7 +7,14 @@ using UnityEngine.SceneManagement;
 
 public class GameMaster : MonoBehaviour
 {
+    // --------------------------------------------------
+    //  CountDown
 
+    // カウントダウンUI
+    public GameObject countImg;
+    // カウントダウンフラグ
+    private bool startCountDownFlg = true;
+    
     // --------------------------------------------------
     //  Score
 
@@ -17,6 +24,14 @@ public class GameMaster : MonoBehaviour
     public Text scoreText;
     // スコア保存場所キー
     private string scoreKey = "totalScore";
+
+    // --------------------------------------------------
+    // Music
+
+    // BGM        
+    public AudioClip sound;
+    // 
+    private AudioSource audioSource;
 
     // --------------------------------------------------
     // Timer
@@ -49,7 +64,7 @@ public class GameMaster : MonoBehaviour
 
 
     // --------------------------------------------------
-
+    
 
     // 盤の一辺の長さ（1マスを1とする）
     private const int boardLength = 8;
@@ -79,6 +94,9 @@ public class GameMaster : MonoBehaviour
     // Raycas による取得した情報を得る構造体配列（子オブジェクト、X軸、Z軸）
     private RaycastHit[] hitObjs, hitXAxisObjs, hitZAxisObjs;
 
+    // バブルエフェクト
+    public GameObject bubblePaticleSystem;
+
     // 生成されるブロック番号（３つ）
     private int[] blockNums　= new int[3];
     // ブロックの使用状況
@@ -106,22 +124,30 @@ public class GameMaster : MonoBehaviour
         BoardInit();
 
         BlockInit();
-        
-        Generate();
 
+        Generate();
+        
         ScoreInit();
 
         TimerInit();
 
         Hidden();
 
+        // 効果音準備
+        audioSource = GetComponent<AudioSource>();
+
         StartCoroutine(WaitForStart());
-        
     }
 
     // 更新はフレームごとに1回呼び出されます
     void Update()
     {
+        // カウントダウン終了まで停止何もしない
+        if (startCountDownFlg)
+        {
+            return;
+        }
+
         Timer();
         // ブロックを置かれた直後なら
         if (putFlg)
@@ -204,7 +230,7 @@ public class GameMaster : MonoBehaviour
         for (int i = 0; i < prefabBlocks.Length; i++)
         {            
             // 1つずつブロックの全オブジェクトのTransformを格納する
-            blockObjs = prefabBlocks[i].gameObject.GetComponentsInChildren<Transform>();
+            blockObjs = prefabBlocks[i].gameObject.GetComponentsInChildren<Transform>();                       
             // 親ObjectのBoxColliderのsizeから x and z の大きさを取得して配列の要素数に使用する
             block.Add(new bool[(int)blockObjs[0].GetComponent<BoxCollider>().size.x, (int)blockObjs[0].GetComponent<BoxCollider>().size.z]);
             // .GetLength(次元数): 指定した配列の次元の長さを取得
@@ -261,11 +287,6 @@ public class GameMaster : MonoBehaviour
             pb.position += new Vector3(x, y, z);
 
         }
-
-
-
-
-
     }
 
     /// <summary>
@@ -389,13 +410,19 @@ public class GameMaster : MonoBehaviour
     }
 
     /// <summary>
-    /// 開始の待機時間
+    /// ゲーム開始カウントダウン
     /// </summary>
-    /// <returns>new WaitForSeconds(2.0f)</returns>
+    /// <returns>new WaitForSeconds(4.5f)</returns>
     private IEnumerator WaitForStart()
     {
-        // 2秒待機
-        yield return new WaitForSeconds(2.0f);
+        // カウントダウン開始
+        countImg.GetComponent<StartCountDownController>().StartCountMethod(true);
+        // 4.5秒待機
+        yield return new WaitForSeconds(4.5f);
+        // カウントダウンUIを非表示
+        countImg.SetActive(false);
+        // カウントダウン終了
+        startCountDownFlg = false;
     }
 
     /// <summary>
@@ -522,6 +549,8 @@ public class GameMaster : MonoBehaviour
             if (Physics.Raycast(ray.origin, ray.direction, out hitBdInfo, 5.0f, LayerMask.GetMask("Board")))
             {     
                 hitBlkInfo.collider.gameObject.transform.position = hitBdInfo.collider.gameObject.transform.position + new Vector3(0, 1, 0);
+                // ブロックを置いた効果音
+                audioSource.PlayOneShot(sound);
             }
             // ブロックを置いた後の子オブジェクトの処理
             foreach (Transform cb in currentBlk)
@@ -567,8 +596,16 @@ public class GameMaster : MonoBehaviour
             {
                 foreach (RaycastHit ho in hitXAxisObjs)
                 {
+                    // 泡を出現させる
+                    //ho.collider.GetComponent<ParticleSystem>().Play();
+                    GameObject bubble = Instantiate(bubblePaticleSystem, ho.collider.gameObject.transform.position, Quaternion.identity) as GameObject;
+                    //Instantiate(bubblePaticleSystem, ho.collider.gameObject.transform);
+                    //bubblePaticleSystem.Play();
+                    bubble.GetComponent<ParticleSystem>().Play();
                     // 1つずつPieceを削除（1フレーム中は存在する）
                     Destroy(ho.collider.gameObject);
+                    Destroy(bubble, 1.5f);
+                    
                 }
                 // ライン数を１つ増やす
                 lineCount++;
@@ -584,8 +621,14 @@ public class GameMaster : MonoBehaviour
             {
                 foreach (RaycastHit ho in hitZAxisObjs)
                 {
+                    // 泡を出現させる
+                    //ho.collider.GetComponent<ParticleSystem>().Play();
+                    GameObject bubble = Instantiate(bubblePaticleSystem, ho.collider.gameObject.transform.position, Quaternion.identity) as GameObject;
+                    bubble.GetComponent<ParticleSystem>().Play();
                     // 1つずつPieceを削除（1フレーム中は存在する）
                     Destroy(ho.collider.gameObject);
+                    Destroy(bubble, 1.5f);
+
                 }
                 // ライン数を１つ増やす
                 lineCount++;
@@ -745,7 +788,7 @@ public class GameMaster : MonoBehaviour
                 // 未使用ブロックを数える
                 usedBlkCount++;
                 //Debug.Log("use:" + usedBlks[i]);
-                //Debug.Log("Emp:" + CanPutBlock(blockNums[i]));
+                Debug.Log("Emp:" + CanPutBlock(blockNums[i]));
                 // 置き場所のないブロックを数える
                 if (!(CanPutBlock(blockNums[i])))
                 {
@@ -753,8 +796,8 @@ public class GameMaster : MonoBehaviour
                 }
             }                                         
         }
-        //Debug.Log("ubc:" + usedBlkCount);
-        //Debug.Log("cpc:" + cannotPutCount);
+        Debug.Log("ubc:" + usedBlkCount);
+        Debug.Log("cpc:" + cannotPutCount);
         // 未使用ブロック数を置き場所の無いブロック数が一致したなら
         if (usedBlkCount == cannotPutCount)
         {

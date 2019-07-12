@@ -58,7 +58,7 @@ public class NameSearch : MonoBehaviour
                         }
                         else
                         {
-                            score_text.text = "その名前は登録されていません";
+                            score_text.text = "何に誰もいませんよ";
                         }
                         j++;
                     }
@@ -118,7 +118,7 @@ public class NameSearch : MonoBehaviour
         inputField.text = "";
 
         //フォーカス
-        inputField.ActivateInputField();
+        //inputField.ActivateInputField();
 
     }
 }

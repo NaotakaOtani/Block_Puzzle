@@ -48,8 +48,11 @@ public class RankingShow : MonoBehaviour
                         string s = System.Convert.ToString(objList[i]["name"]); // 名前を取得
                         int n = System.Convert.ToInt32(objList[i]["score"]); // スコアを取得
 
-                        Text score_text = item.GetComponentInChildren<Text>();
-                        score_text.text += j + " " + s + " " + n + "\n";
+                        Text[] rankingText = item.GetComponentsInChildren<Text>();
+                        
+                        rankingText[0].text = j.ToString();
+                        rankingText[1].text = s;
+                        rankingText[2].text = n.ToString();
                         j++;
                     }
                 }
