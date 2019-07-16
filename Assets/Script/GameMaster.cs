@@ -73,6 +73,8 @@ public class GameMaster : MonoBehaviour
     private int ran;
     // 使用済みブロックの数
     private int numberOfUsedBlks = 0;
+    // 再生成の使用回数
+    private int numberOfRegUsed = 1;
 
     // Rayが衝突した対象がブロックかどうか
     private bool rayHitBlk = false;
@@ -90,18 +92,20 @@ public class GameMaster : MonoBehaviour
 
     // Ray
     private Ray ray;
-    // Raycas による取得した情報を得る構造体（ブロック、盤、盤上のPiece）
-    private RaycastHit hitBlkInfo, hitBdInfo, hitPieceOnBd;
+    // Raycas による取得した情報を得る構造体（ブロック、盤、盤上のPiece、生成ブロック）
+    private RaycastHit hitBlkInfo, hitBdInfo, hitPieceOnBdInfo, hitGenBlkInfo;
     // Raycas による取得した情報を得る構造体配列（子オブジェクト、X軸、Z軸）
     private RaycastHit[] hitObjs, hitXAxisObjs, hitZAxisObjs;
-
+    
     // バブルエフェクト
     public GameObject bubblePaticleSystem;
-
+    
     // 生成されるブロック番号（３つ）
     private int[] blockNums　= new int[3];
     // ブロックの使用状況
     private bool[] usedBlks = new bool[3];
+    // 生成されたブロック情報を保持
+    private GameObject[] generationBlk = new GameObject[3];
 
     // ブロックの生成位置用の枠
     public Transform[] generationFrame;
@@ -125,14 +129,14 @@ public class GameMaster : MonoBehaviour
         BoardInit();
 
         BlockInit();
-
-        Generate();
         
         ScoreInit();
 
         TimerInit();
 
         Hidden();
+
+        Generate();
 
         // 効果音準備
         audioSource = GetComponent<AudioSource>();
@@ -372,6 +376,32 @@ public class GameMaster : MonoBehaviour
     }
 
     /// <summary>
+    /// ブロックの再生成（３つ）
+    /// </summary>
+    private void Regeneration()
+    {
+        int next = 0;
+        // 一番左のブロック生成位置の中心から、右のブロック生成位置の中心へ
+        ray = new Ray(new Vector3(1 + next, 2f, -3), new Vector3(0, -1, 0));
+        Debug.DrawRay(ray.origin, ray.direction * 2, Color.black, 3);
+        for (int i = 0; i < 3; i++)
+        {
+            if (Physics.Raycast(ray.origin, ray.direction, out hitGenBlkInfo, 2.0f, LayerMask.GetMask("Block")))
+            {
+                Destroy(hitGenBlkInfo.collider.gameObject);
+            }
+            next += 3;
+        }       
+        // 再生成
+        Generate();
+        // ブロックの使用状況を初期化
+        for (int i = 0; i < usedBlks.Length; i++)
+        {
+            usedBlks[i] = false;
+        }
+    }
+
+    /// <summary>
     /// スコアの初期設定
     /// </summary>
     private void ScoreInit()
@@ -453,6 +483,15 @@ public class GameMaster : MonoBehaviour
         {
             StartCoroutine(TimeUp());
         }
+        // 2分と1分のとき再生成の使用回数を増やす
+        if (minute == 2 && seconds == 0)
+        {
+            UseCntInc();
+        }
+        else if (minute == 1 && seconds == 0)
+        {
+            UseCntInc();
+        }
     }
 
     /// <summary>
@@ -471,6 +510,14 @@ public class GameMaster : MonoBehaviour
         yield return new WaitForSeconds(2.0f);        
         // リザルトシーンへ遷移
         SceneManager.LoadScene("Result");
+    }
+
+    /// <summary>
+    /// 再生成の使用回数を増やす
+    /// </summary>
+    private void UseCntInc()
+    {
+        numberOfRegUsed++;
     }
 
     /// <summary>
@@ -685,9 +732,9 @@ public class GameMaster : MonoBehaviour
             {
                 // x:z = 0:0 マスの中心から盤面に向かって
                 ray = new Ray(new Vector3(g, 1.1f, f), new Vector3(0, -1, 0));
-                Physics.Raycast(ray.origin, ray.direction, out hitPieceOnBd, 1.5f);
+                Physics.Raycast(ray.origin, ray.direction, out hitPieceOnBdInfo, 1.5f);
                 // 盤上にPieceがあるならtrue、そうでないならfalse
-                if (hitPieceOnBd.collider.gameObject.tag == "Piece")
+                if (hitPieceOnBdInfo.collider.gameObject.tag == "Piece")
                 {
                     board[z][x] = true;
                 }
@@ -719,7 +766,7 @@ public class GameMaster : MonoBehaviour
             Debug.DrawRay(ray.origin, ray.direction * 2, Color.white, 3);
             // ブロックの生成位置に、まだ未使用のブロックがあるならtrue、そうでないならfalse
             if (Physics.Raycast(ray.origin, ray.direction, out hitBdInfo, 2.0f, LayerMask.GetMask("Block")))
-            {
+            {           
                 usedBlks[i] = true;
             }
             else
