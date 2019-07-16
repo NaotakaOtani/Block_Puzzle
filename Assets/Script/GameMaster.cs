@@ -28,8 +28,9 @@ public class GameMaster : MonoBehaviour
     // --------------------------------------------------
     // Music
 
-    // BGM        
-    public AudioClip sound;
+    // 効果音        
+    public AudioClip soundOfPut;
+    public AudioClip soundOfBubble;
     // 
     private AudioSource audioSource;
 
@@ -72,8 +73,6 @@ public class GameMaster : MonoBehaviour
     private int ran;
     // 使用済みブロックの数
     private int numberOfUsedBlks = 0;
-    // 再生成の使用回数
-    private int numberOfRegUsed = 1;
 
     // Rayが衝突した対象がブロックかどうか
     private bool rayHitBlk = false;
@@ -98,6 +97,9 @@ public class GameMaster : MonoBehaviour
     
     // バブルエフェクト
     public GameObject bubblePaticleSystem;
+
+    // 再生成用ボタン
+    public Button regenarationBtn;
     
     // 生成されるブロック番号（３つ）
     private int[] blockNums　= new int[3];
@@ -151,7 +153,6 @@ public class GameMaster : MonoBehaviour
         {
             return;
         }
-
         Timer();
         // ブロックを置かれた直後なら
         if (putFlg)
@@ -377,27 +378,32 @@ public class GameMaster : MonoBehaviour
     /// <summary>
     /// ブロックの再生成（３つ）
     /// </summary>
-    private void Regeneration()
+    public void Regeneration()
     {
         int next = 0;
-        // 一番左のブロック生成位置の中心から、右のブロック生成位置の中心へ
-        ray = new Ray(new Vector3(1 + next, 2f, -3), new Vector3(0, -1, 0));
-        Debug.DrawRay(ray.origin, ray.direction * 2, Color.black, 3);
+        // 一番左のブロック生成位置の中心から、右のブロック生成位置の中心へ 
         for (int i = 0; i < 3; i++)
         {
+            ray = new Ray(new Vector3(1 + next, 2f, -3), new Vector3(0, -1, 0));
+            Debug.DrawRay(ray.origin, ray.direction * 2, Color.black, 3);
             if (Physics.Raycast(ray.origin, ray.direction, out hitGenBlkInfo, 2.0f, LayerMask.GetMask("Block")))
             {
+                // ブロックの削除
                 Destroy(hitGenBlkInfo.collider.gameObject);
             }
             next += 3;
-        }       
-        // 再生成
-        Generate();
+        }
         // ブロックの使用状況を初期化
         for (int i = 0; i < usedBlks.Length; i++)
         {
             usedBlks[i] = false;
         }
+        // ブロックの使用数を初期化
+        numberOfUsedBlks = 0;
+        // 再生成
+        Generate();
+
+        RedPoint(5000);
     }
 
     /// <summary>
@@ -481,16 +487,7 @@ public class GameMaster : MonoBehaviour
         if (totalTime <= 0f)
         {
             StartCoroutine(TimeUp());
-        }
-        // 2分と1分のとき再生成の使用回数を増やす
-        if (minute == 2 && seconds == 0)
-        {
-            UseCntInc();
-        }
-        else if (minute == 1 && seconds == 0)
-        {
-            UseCntInc();
-        }
+        }        
     }
 
     /// <summary>
@@ -509,14 +506,6 @@ public class GameMaster : MonoBehaviour
         yield return new WaitForSeconds(2.0f);        
         // リザルトシーンへ遷移
         SceneManager.LoadScene("Result");
-    }
-
-    /// <summary>
-    /// 再生成の使用回数を増やす
-    /// </summary>
-    private void UseCntInc()
-    {
-        numberOfRegUsed++;
     }
 
     /// <summary>
@@ -597,7 +586,7 @@ public class GameMaster : MonoBehaviour
             {     
                 hitBlkInfo.collider.gameObject.transform.position = hitBdInfo.collider.gameObject.transform.position + new Vector3(0, 1, 0);
                 // ブロックを置いた効果音
-                audioSource.PlayOneShot(sound);
+                audioSource.PlayOneShot(soundOfPut);
             }
             // ブロックを置いた後の子オブジェクトの処理
             foreach (Transform cb in currentBlk)
@@ -654,6 +643,8 @@ public class GameMaster : MonoBehaviour
                     Destroy(bubble, 1.5f);
                     
                 }
+                // 泡の音
+                audioSource.PlayOneShot(soundOfBubble);
                 // ライン数を１つ増やす
                 lineCount++;
             }
@@ -688,7 +679,7 @@ public class GameMaster : MonoBehaviour
     /// <summary>
     /// スコアのポイント加算
     /// </summary>
-    public void AddPoint(int line)
+    private void AddPoint(int line)
     {
         // line: 0(ブロックが置かれたとき) line: 1～6(列が揃ったとき)
         if (line == 0)
@@ -701,6 +692,19 @@ public class GameMaster : MonoBehaviour
             score += point;
         }
         
+    }
+
+    /// <summary>
+    /// スコアのポイント減算
+    /// </summary>
+    private void RedPoint(int point)
+    {
+        score -= point;
+        // スコアがマイナスになったとき０に変更する
+        if (score < 0)
+        {
+            score = 0;
+        }
     }
 
     /// <summary>
