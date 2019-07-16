@@ -29,7 +29,8 @@ public class GameMaster : MonoBehaviour
     // Music
 
     // BGM        
-    public AudioClip sound;
+    public AudioClip soundToPutBlock;
+    public AudioClip soundOfBubble;
     // 
     private AudioSource audioSource;
 
@@ -550,7 +551,7 @@ public class GameMaster : MonoBehaviour
             {     
                 hitBlkInfo.collider.gameObject.transform.position = hitBdInfo.collider.gameObject.transform.position + new Vector3(0, 1, 0);
                 // ブロックを置いた効果音
-                audioSource.PlayOneShot(sound);
+                audioSource.PlayOneShot(soundToPutBlock);
             }
             // ブロックを置いた後の子オブジェクトの処理
             foreach (Transform cb in currentBlk)
@@ -607,6 +608,8 @@ public class GameMaster : MonoBehaviour
                     Destroy(bubble, 1.5f);
                     
                 }
+                // 泡の音
+                audioSource.PlayOneShot(soundOfBubble);
                 // ライン数を１つ増やす
                 lineCount++;
             }
@@ -630,6 +633,8 @@ public class GameMaster : MonoBehaviour
                     Destroy(bubble, 1.5f);
 
                 }
+                // 泡の音
+                audioSource.PlayOneShot(soundOfBubble);
                 // ライン数を１つ増やす
                 lineCount++;
             }
