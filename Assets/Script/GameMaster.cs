@@ -379,31 +379,35 @@ public class GameMaster : MonoBehaviour
     /// ブロックの再生成（３つ）
     /// </summary>
     public void Regeneration()
-    {
-        int next = 0;
-        // 一番左のブロック生成位置の中心から、右のブロック生成位置の中心へ 
-        for (int i = 0; i < 3; i++)
+    {        
+        // タブレット タッチ数が1のとき
+        if (Input.touchCount == 1)
         {
-            ray = new Ray(new Vector3(1 + next, 2f, -3), new Vector3(0, -1, 0));
-            Debug.DrawRay(ray.origin, ray.direction * 2, Color.black, 3);
-            if (Physics.Raycast(ray.origin, ray.direction, out hitGenBlkInfo, 2.0f, LayerMask.GetMask("Block")))
+            int next = 0;
+            // 一番左のブロック生成位置の中心から、右のブロック生成位置の中心へ 
+            for (int i = 0; i < 3; i++)
             {
-                // ブロックの削除
-                Destroy(hitGenBlkInfo.collider.gameObject);
+                ray = new Ray(new Vector3(1 + next, 2f, -3), new Vector3(0, -1, 0));
+                Debug.DrawRay(ray.origin, ray.direction * 2, Color.black, 3);
+                if (Physics.Raycast(ray.origin, ray.direction, out hitGenBlkInfo, 2.0f, LayerMask.GetMask("Block")))
+                {
+                    // ブロックの削除
+                    Destroy(hitGenBlkInfo.collider.gameObject);
+                }
+                next += 3;
             }
-            next += 3;
-        }
-        // ブロックの使用状況を初期化
-        for (int i = 0; i < usedBlks.Length; i++)
-        {
-            usedBlks[i] = false;
-        }
-        // ブロックの使用数を初期化
-        numberOfUsedBlks = 0;
-        // 再生成
-        Generate();
+            // ブロックの使用状況を初期化
+            for (int i = 0; i < usedBlks.Length; i++)
+            {
+                usedBlks[i] = false;
+            }
+            // ブロックの使用数を初期化
+            numberOfUsedBlks = 0;
+            // 再生成
+            Generate();
 
-        RedPoint(5000);
+            RedPoint(5000);
+        }    
     }
 
     /// <summary>
@@ -536,11 +540,11 @@ public class GameMaster : MonoBehaviour
     {
         // マウスの座標を取得する
         Vector3 mousePos = Input.mousePosition;
-        //
+        // MainCameraから
         mousePos.z = 14.0f;
-
+        // マウスの座標をUnityの座標に変換
         Vector3 screenPos = Camera.main.ScreenToWorldPoint(mousePos);
-
+        // ブロックの座標を変更
         hitBlkInfo.collider.gameObject.transform.position = screenPos;
     }
 
@@ -632,11 +636,8 @@ public class GameMaster : MonoBehaviour
             {
                 foreach (RaycastHit ho in hitXAxisObjs)
                 {
-                    // 泡を出現させる
-                    //ho.collider.GetComponent<ParticleSystem>().Play();
+                    // 泡を出現させる               
                     GameObject bubble = Instantiate(bubblePaticleSystem, ho.collider.gameObject.transform.position, Quaternion.identity) as GameObject;
-                    //Instantiate(bubblePaticleSystem, ho.collider.gameObject.transform);
-                    //bubblePaticleSystem.Play();
                     bubble.GetComponent<ParticleSystem>().Play();
                     // 1つずつPieceを削除（1フレーム中は存在する）
                     Destroy(ho.collider.gameObject);

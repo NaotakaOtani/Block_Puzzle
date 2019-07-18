@@ -17,7 +17,7 @@ public class RankingShow : MonoBehaviour
     void Start()
     {
 
-        //WiFi でアクセス可能
+        //WiFi でアクセス可能(オンライン)
         if (Application.internetReachability == NetworkReachability.ReachableViaLocalAreaNetwork)
         {
             NCMBQuery<NCMBObject> query = new NCMBQuery<NCMBObject>("RankingData");
@@ -59,7 +59,7 @@ public class RankingShow : MonoBehaviour
             });
             Debug.Log("ネットワークある");
         }
-        //WiFi アクセス不可
+        //WiFi アクセス不可(オフライン)
         else if (Application.internetReachability == NetworkReachability.NotReachable)
         {
             Debug.Log("ネットワークが使えない");
@@ -91,7 +91,9 @@ public class RankingShow : MonoBehaviour
                         _name += " ";
                     }
 
-                    Text score_text = item.GetComponentInChildren<Text>();
+                    Text[] rankingText = item.GetComponentsInChildren<Text>();
+
+                    /*
                     //順位の桁ごとに空白追加
                     if (j < 10)
                     {
@@ -102,8 +104,16 @@ public class RankingShow : MonoBehaviour
                     {
                         score_text.text += j + "  " + _name + " " + _point_score + "\n";
                     }
+                    j++;                       
+                     */
+
+                    rankingText[0].text = j.ToString();
+                    rankingText[1].text = _name;
+                    rankingText[2].text = _point_score.ToString();
                     j++;
-                    Debug.Log(score_text.text);
+
+
+                    Debug.Log(rankingText[0].text + ":" + rankingText[1].text + ":" + rankingText[2].text);
                 }
 
             }
